@@ -104,6 +104,19 @@
         </style>
     </head>
     <body>
+        <%
+            String userid="";
+            String password="";
+            Cookie cookies[]=request.getCookies();
+            for(Cookie c: cookies)
+            {
+                if(c.getName().equals("userid"))
+                    userid=c.getValue();
+                if(c.getName().equals("password"))
+                    password=c.getValue();
+            }
+            
+        %>
         <div class="container">
             <div class="d-flex justify-content-center h-100">
                 <div class="card">
@@ -128,17 +141,17 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-user"></i></span>
                                 </div>
-                       <input type="text" name="userid" id="name" class="form-control" placeholder="username" required="required" autocomplete="off" onfocus="s1.innerHTML='';">
+                       <input type="text" name="userid" id="name" class="form-control" placeholder="username" required="required" autocomplete="off" onfocus="s1.innerHTML='';" value="<%=userid%>">
 
                             </div>
                             <div class="input-group form-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-key"></i></span>
                                 </div>
-                                <input type="password" name="password" class="form-control" placeholder="password" required="required" >
+                                <input type="password" name="password" class="form-control" placeholder="password" required="required" value="<%=password%>" >
                             </div>
                             <div class="row align-items-center remember">
-                                <input type="checkbox">Remember Me
+                                <input type="checkbox"name="remember" value="yes">Remember Me
                             </div>
                             <div class="form-group">
                                 <input type="submit" value="Login" class="btn float-right login_btn">

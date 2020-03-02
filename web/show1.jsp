@@ -13,8 +13,10 @@
     </head>
     <body>
         <h1>Person details are</h1>
+        <jsp:useBean class="com.first.person" id="person" scope="session"></jsp:useBean>
         <%
-            person person=(person)session.getAttribute("person");
+            
+           // person person=(person)session.getAttribute("person");
             String islogin=(String)session.getAttribute("loggedin");
             if(person==null)
             {
@@ -31,6 +33,8 @@
             
         %>
         <h3>name=<%=person.getName()%></h3>
+        
+         <jsp:getProperty name="person" property="name"></jsp:getProperty> <br/>
         <h3>Age=<%=person.getAge()%></h3>
     </body>
 </html>
