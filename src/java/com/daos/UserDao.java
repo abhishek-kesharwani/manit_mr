@@ -195,6 +195,7 @@ public class UserDao {
     }
     public boolean update(User user)
     {
+        int id=user.getId();
         boolean status=false;
         ConnectionPool cp=ConnectionPool.getInstance();
         cp.initialize();
@@ -202,7 +203,7 @@ public class UserDao {
         if(con!=null)
         {
             try{
-                String sql="update user set name=?,fname=?,dob=?,gender=?,password=?,hobbies=?,userid=?,photo=?";
+                String sql="update user set name=?,fname=?,dob=?,gender=?,password=?,hobbies=?,photo=? where id=?";
                 PreparedStatement smt=con.prepareStatement(sql);
                 smt.setString(1,user.getName());
                  smt.setString(2,user.getFname());
@@ -210,8 +211,8 @@ public class UserDao {
                   smt.setString(4, user.getGender());
                    smt.setString(5,user.getPassword());
                     smt.setString(6,user.getHobbies());
-                     smt.setString(7,user.getUserid());
-                      smt.setString(8,user.getPhoto());
+                     smt.setString(7,user.getPhoto());
+                     smt.setInt(8, id);
                 if(smt.executeUpdate()>0)
                     status=true;
                 smt.close();
