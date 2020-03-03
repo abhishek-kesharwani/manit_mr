@@ -4,6 +4,7 @@
     Author     : abhishek
 --%>
 
+<%@page import="com.daos.UserDao"%>
 <%@page import="java.sql.DriverManager"%>
 <%@page contentType="text/html" pageEncoding="UTF-8" import ="java.sql.*"%>
 <!DOCTYPE html>
@@ -12,96 +13,123 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>JSP Page</title>
         <jsp:include page="base.jsp"></jsp:include>
+        
         <script>
-             function readURL(input) {
+        function readURL(input) {
             if (input.files && input.files[0]) {
                 var reader = new FileReader();
 
                 reader.onload = function (e) {
-                   pic.src= e.target.result;
+                    img1.src= e.target.result;
                 };
 
                 reader.readAsDataURL(input.files[0]);
             }
         }
-            </script>
-             <style>
+         
+        
+           
+   </script>
+            <style>
                 img{
-                max-width:180px;
-                 }
-                input[type=file]{
-                padding:10px;
-                background:#2d2d2d;}
+  max-width:180px;
+}
+input[type=file]{
+padding:10px;
+background:#2d2d2d;}
             </style>
     </head>
     <body>
-        
-        <%
-           int id = Integer.parseInt(request.getParameter("id"));
-            Connection con=null;
-            PreparedStatement smt=null;
-            try{
-                 Class.forName("com.mysql.jdbc.Driver");
-                 con = DriverManager.getConnection("jdbc:mysql://localhost:3306/gisttraining","root","123456");
-                String sql="select * from user where id=?";
-                smt=con.prepareStatement(sql);
-                smt.setInt(1, id);
-                ResultSet rs=smt.executeQuery();
-                if(rs.next()){%>
-                <form action="UserController?op=update&id=<%=rs.getString("id")%>&pic=<%=rs.getString("photo")%>" method="post" enctype="multipart/form-data"> 
-             <center>
-              <h1>update user's data </h1>
-                 <table width="800" border="2" class="bg-light"> 
-               <tr>
-                <td>Your Name </td>
-                <td><input type="text" name="name" required="required" autocomplete="off" value="<%=rs.getString("name")%>"/> </td>
-                <td rowspan="6">
-                    <img src="<%=rs.getString("photo")%>" class="img img-thumbnail" style="height:170px; width:170px" id="pic"/><br/>
-                    Change profile Image <br/><input type="file" name="photo" onchange="readURL(this)"/>
-                </td>
+    <jsp:useBean class="com.beans.User" id = "user" scope="session"></jsp:useBean>
+        <div class="container">
+             <div class="row">
+                 <div style="position: fixed; bottom: 0px">
+                     <% if (request.getParameter("submit")!=null){%>
+                     <jsp:setProperty name="user" property="*"></jsp:setProperty>
+                     <%
+                         String hobbies[] = request.getParameterValues("hobbies");
+                         String hbs="";
+                         for (String s : hobbies)
+                            hbs += s +",";
+                         
+                         user.setHobbies(hbs);
+                         
+                         %>
+                     
+                     
+                     <form action="UserController?op=update&id=${user.id}" method="post" enctype="multipart/form-data">
+                     <img src="${user.photo}" id="img1" class="img img-thumbnail" style="width:200px; height: 200px"/> <br/>
+                     Change Profile Image<input type="file" name="photo" id="photo" onchange="readURL(this);" />
+                     <br/>
+                     <input type="submit" value=" Update in Record"/>
+                     </form>
+                     <%}%>
+                 </div>             
+             </div>
+            
+            
+            
+            <div class="row">
+                <div class="col">
+                     <%
+         int id =request.getParameter("id")!=null?Integer.parseInt(request.getParameter("id")):-1;
+         UserDao ud = new UserDao();
+         if(user!=null && user.getId()!=id){
+         user  = ud.getById(id);
+         session.setAttribute("user", user);
+         }
+        %> 
+         
+    
+   <form method="post" class="form"> 
+    <center>
+        <h2> Update User's Data </h2>
+        <table class="table bg-info"> 
+            <tr>
+                <td>Name </td>
+                <td><input type="text" name="name" required="required" autocomplete="off" value="${user.name}"/> </td>
+               
             </tr> <tr>
-                <td>Enter your Father's Name </td>
-                <td><input type="text" name="fname" required="required" value="<%=rs.getString("fname")%>"/> </td>
+                <td>Father's Name </td>
+                <td><input type="text" name="fname" required="required" value="${user.fname}"/> </td>
             </tr>
              <tr>
-                <td>Enter your DOB </td>
-                <td><input type="date" name="dob" value="<%=rs.getString("dob")%>"/> </td>
+                <td>your DOB  </td>
+                <td><input type="date" name="dob" value="${user.dob}" /> </td>
             </tr>
              <tr>
-                <td>Select Your Gender </td>
-                <td> <input type="radio" name="gender" value="Male" <%if (rs.getString("gender").equalsIgnoreCase("Male")) out.println("checked='checked'");%>/> Male<br/>
-                    <input type="radio" name="gender" value="Female"<%if(rs.getString("gender").equalsIgnoreCase("Female"))out.println("checked='checked'"); %>/>Female<br/>
+                <td>Your Gender </td>
+                <td> <input type="radio" name="gender"  value="Male"  ${user.gender eq "Male"?  " checked":""}/> Male<br/>
+                    <input type="radio" name="gender" value="Female" ${user.gender eq "Female"?  " checked":""} />Female<br/>
                 </td>
             </tr> 
-                <td>Select Your Hobbies </td>
+                <td>Selected Hobbies : </td>
                 <td>
-                    <input type="checkbox" name="hobbies" value="Dancing" <%if (rs.getString("hobbies").contains("Dancing")) out.println("checked='checked'");%>/>Dancing
-                     <input type="checkbox" name="hobbies" value="Singing"<%if (rs.getString("hobbies").contains("Singing")) out.println("checked='checked'");%>/>Singing <br/>
-                    <input type="checkbox" name="hobbies" value="Cooking"<%if (rs.getString("hobbies").contains("Cooking")) out.println("checked='checked'");%>/>Cooking
-                    <input type="checkbox" name="hobbies" value="Drawing" <%if (rs.getString("hobbies").contains("Drawing")) out.println("checked='checked'");%>/>Drawing
+                    <input type="checkbox" name="hobbies" value="Dancing"  ${user.hobbies.contains("Dancing")? " checked" :""} />Dancing
+                     <input type="checkbox" name="hobbies" value="Singing" ${user.hobbies.contains("Singing")? " checked" :""}/>Singing <br/>
+                    <input type="checkbox" name="hobbies" value="Cooking" ${user.hobbies.contains("Cooking")? " checked" :""}/>Cooking
+                    <input type="checkbox" name="hobbies" value="Drawing" ${user.hobbies.contains("Drawing")? " checked" :""}  />Drawing
                  </td>
             </tr>
             
             <tr>
                  
-                <th colspan="2" >
+                <th colspan="2">
                     <input type="reset" value="Clear" />
-                    <input type="submit" value="submit"/> 
+                    <input type="submit" name="submit" value="Save and Next "/> 
                 </th>
             </tr>
             
          </table>
-                  </center>
+    </center>
         </form>
-          <%}
-           smt.close();
-           con.close();
-        }
-            catch(Exception e)
-            {
-                System.out.println("Error :"+e.getMessage());
-            }
-   
-     %>
+    
+    </div>
+            </div>
+                 
+                
+                 
+        </div>
+       
     </body>
 </html>
