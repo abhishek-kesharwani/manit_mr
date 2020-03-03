@@ -1,6 +1,8 @@
  
 package com.first;
 
+import com.beans.User;
+import com.daos.UserDao;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -16,6 +18,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import java.util.Iterator;
 import java.util.List;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.http.HttpSession;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.FileUploadException;
@@ -37,31 +40,13 @@ public class UserController extends HttpServlet {
        System.out.println(op);
        
         if (op!=null && op.equalsIgnoreCase("delete")){
-            Connection con =null;
-            PreparedStatement smt=null;
+            
             int id = Integer.parseInt(request.getParameter("id"));
             
-              try{
-            Class.forName("com.mysql.jdbc.Driver");
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/gisttraining","root","123456");
-            String sql = "delete from user where id=?";
-            smt = con.prepareStatement(sql);
-            smt.setInt(1, id);
-            
-
-            int n = smt.executeUpdate();
-            
-            smt.close();
-            con.close();
-            if (n>0)
-                //out.println("Data Inserted to table ...");
-                response.sendRedirect("view.jsp");
-            
-        }catch(Exception e){
-            System.out.println("Error : + "+ e.getMessage());
-        
-        } 
-        }
+          UserDao ud=new UserDao();
+          if(ud.remove(id))
+              response.sendRedirect("view.jsp");
+              }
                     
     }
 
@@ -77,40 +62,14 @@ public class UserController extends HttpServlet {
 
             //check the enctype of the incomming request -
             boolean isMultipart = ServletFileUpload.isMultipartContent(request);
-               String name ="";
-               String fname="";
-               String dob="";
-               String gender ="";
-               String userid="";
-               String password="";
-               String hobbies[]=null;
-               String photo="";
-               String imagePath="";
-               String hbs="";
+              
                String encodedPassword="";
-               List<String> checkboxlist = new ArrayList();
-               
-            if (!isMultipart) {
-                 name = StringEscapeUtils.escapeHtml(request.getParameter("name"));
-                  fname = StringEscapeUtils.escapeHtml(request.getParameter("fname"));
-                  dob = request.getParameter("dob");
-                  gender = request.getParameter("gender");
-                  userid = request.getParameter("userid");
-                  password = request.getParameter("password");
-                  hobbies = request.getParameterValues("hobbies");
-                  photo = request.getParameter("photo");
-                  hbs = "";
-                //Rending the Information that has been received ..
-                //  out.println("Name : "+ name +"<br/> Fname " + fname + "<br/>"
-                //          + "dob : " + dob + "<br/>gender : " + gender +"<br/>Hobbies : <br/>");
-
-                for (String h : hobbies) {
-                    hbs += h + ",";
-                } 
-                
-            }
-             else {
-                FileItemFactory factory = new DiskFileItemFactory();
+               String photo="",imagePath="";
+              HttpSession session = request.getSession();
+              User user=(User)session.getAttribute("user");
+              
+                if (isMultipart) {
+                 FileItemFactory factory = new DiskFileItemFactory();
                 ServletFileUpload upload = new ServletFileUpload(factory);
                 List items = null;
                 try {
@@ -122,126 +81,28 @@ public class UserController extends HttpServlet {
                 Iterator itr = items.iterator();
                 while (itr.hasNext()) {
                     FileItem item = (FileItem) itr.next();
-                    if (item.isFormField()) {
-                        String fieldName = item.getFieldName();
-                        String fieldValue = item.getString();
-                        if (fieldName.equals("name"))  
-                            name = fieldValue;
-                        else if (fieldName.equals("fname"))  
-                            fname = fieldValue;
-                         else if (fieldName.equals("dob"))  
-                            dob = fieldValue;
-                       
-                        else if(fieldName.equals("userid")) 
-                            userid = fieldValue;
-                        else if (fieldName.equals("password"))
-                            password = fieldValue;
-                        else if(fieldName.equals("gender"))
-                            gender=fieldValue;
-                        else if (fieldName.equals("hobbies"))
-                            checkboxlist.add(fieldValue);
-                        
-                    } else {
-                        try {
+                    if (!item.isFormField()) {
+                      try {
                             photo = item.getName();
                             imagePath = "assets/media/user/" + photo ;
                             File savedFile = new File(getServletContext().getRealPath("/") + imagePath);
                             item.write(savedFile);
+                            user.setPhoto(imagePath);
                         } catch (Exception e) {
                             out.println("Error  " + e.getMessage());
                         }
                     }
-                    
-                    hbs="";
-                    for(String s : checkboxlist)
-                        hbs += s +",";
                 }
             }
-
-                //=============================================//
-               
-
-                //JDBC Code 
-                Connection con = null;
-                PreparedStatement smt = null;
-                encodedPassword = Base64.getEncoder().encodeToString(password.getBytes("UTF-8"));
-                try {
-                    Class.forName("com.mysql.jdbc.Driver");
-                    con = DriverManager.getConnection("jdbc:mysql://localhost:3306/gisttraining", "root", "123456");
-                    String sql = "Insert into user(name,fname,dob,gender,hobbies,userid,password,photo) values(?,?,?,?,?,?,?,?)";
-                    smt = con.prepareStatement(sql);
-                    smt.setString(1, name);
-                    smt.setString(2, fname);
-                    smt.setString(3, dob);
-                    smt.setString(4, gender);
-                    smt.setString(5, hbs);
-                    smt.setString(6, userid);
-                    smt.setString(7, encodedPassword);
-                    smt.setString(8, imagePath);
-                    //execute the command : executeUpdate()-for insert,update and delete or executeQuery()-for select
-
-                    int n = smt.executeUpdate();
-
-                    smt.close();
-                    con.close();
-                    if (n > 0) //out.println("Data Inserted to table ...");
-                    {
-                        response.sendRedirect("view.jsp");
-                    }
-
-                } catch (Exception e) {
-                    System.out.println("Error : + " + e.getMessage());
-                    if (e.getMessage().contains("Duplicate")) {
-                        out.println("<font color='red' size='5' face='corbel'> the Userid you entered is not available</font>");
-                        out.println("<hr/>");
-                        RequestDispatcher rd = request.getRequestDispatcher("register.jsp");
-                        rd.include(request, response);
-                    }
-
-                }
-            }
-        /*
-        //Retrieveing data using Enumeration:
-        Enumeration form = request.getParameterNames();
-        while(form.hasMoreElements()){
-            String name =(String) form.nextElement();
-            String values[] = request.getParameterValues(name);
-            out.println(name + "  :  " );
-            
-            for (String s : values)
-                out.println(s +"<br/>");
-        
-        
-*/
-        if(op!=null&& op.equalsIgnoreCase("login"))
-        {
-                 String userid =request.getParameter("userid");
-                 String password=request.getParameter("password");
-                 String encodedPassword =  Base64.getEncoder().encodeToString(password.getBytes("UTF-8"));
-                 Connection con=null;
-                 PreparedStatement smt=null;
-                 try{
-                     Class.forName("com.mysql.jdbc.Driver");
-                     con=DriverManager.getConnection("jdbc:mysql://localhost:3306/gisttraining", "root","123456");
-                     String sql="select * from user where userid=? and password=?";
-                     smt=con.prepareStatement(sql);
-                    
-                     smt.setString(1, userid);
-                     smt.setString(2, encodedPassword);
-                      ResultSet rs=smt.executeQuery();
-                     
-                    if(rs.next()){
-                        response.sendRedirect("welcome.jsp?name="+rs.getString("name"));
-                    }
-                    else 
-                        response.sendRedirect("login.jsp?msg=Invalid Userid or Password");
-
-                      con.close();
-                    smt.close();
-                         }catch(Exception e)
-                         {
-                             System.out.println("Error : "+e.getMessage());
-                         }
+             //JDBC Code 
+                encodedPassword = Base64.getEncoder().encodeToString(user.getPassword().getBytes("UTF-8"));
+                user.setPassword(encodedPassword);
+                UserDao ud=new UserDao();
+               if(ud.add(user))
+               {
+                   session.removeAttribute("user");
+                   response.sendRedirect("view.jsp");
+               }
         }
         
         

@@ -25,7 +25,7 @@
     </head>
     <body>
         <%
-        int start=0,end=3,total=0;
+        int start=1,end=3,total=0;
         %>
         <div class="container-fluid " >
             <div class="row">
@@ -78,7 +78,7 @@
                     <td><%= rs.getString("gender")%></td>
                     <td><%= rs.getString("hobbies")%></td>
                     <td><img src="<%= rs.getString("photo")%>" style="width:64px; height: 64px;" class="img img-thumbnail"/></td>
-                    <td><a class="btn btn-success"href="edit.jsp?id=<%=rs.getString("id")%>"><i class="fa fa-pencil" aria-hidden="true"></i>Edit</a> || <a class="btn btn-danger" href="UserController?op=delete&id=<%=rs.getString("id")%>" onclick="return confirmation()"><i class="fa fa-trash" aria-hidden="true"></i>Delete</a></td>
+                    <td><a class="btn btn-success"href="edit2.jsp?id=<%=rs.getString("id")%>"><i class="fa fa-pencil" aria-hidden="true"></i>Edit</a> || <a class="btn btn-danger" href="UserController?op=delete&id=<%=rs.getString("id")%>" onclick="return confirmation()"><i class="fa fa-trash" aria-hidden="true"></i>Delete</a></td>
                     
                 </tr>
                 
@@ -97,8 +97,8 @@
             <center>
                 <a href="view.jsp?start=<%=start-end%>" class="btn btn-primary <%if(start==0) out.println("disabled");%>" style="float:left"> << Previous</a>
                 <a href="view.jsp?start=<%=start+end%>" class="btn btn-primary <% if(total-start<=end) out.println("disabled");%>" style="float:right">Next>></a>
-                <% for(int i=0;i<=total/end;i++){%>
-                 <a href="view.jsp?start=<%=i*end%>" class="btn btn-success <%if(i==Math.floor(start/end))out.println(" btn-dark");%>">Page<%=i+1%></a>
+                <% for(int i=0;total%end==0?i<total/end:i<=total/end;i++){%>
+                 <a href="view.jsp?start=<%=(i)*end%>" class="btn btn-success <%if(i==Math.floor(start/end))out.println(" btn-dark");%>">Page<%=i+1%></a>
                  <%}%>
             </center>
         </span>
